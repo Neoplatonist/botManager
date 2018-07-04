@@ -2,13 +2,13 @@ package command
 
 import "strings"
 
-var commandList []string
+var commandList = make(map[string][]string, 0)
 
-func addCommand(c string) {
-	commandList = append(commandList, c)
+func addCommand(name string, c string) {
+	commandList[name] = append(commandList[name], c)
 }
 
-// CommandList returns all commands currently usable
-func CommandList() string {
-	return strings.Join(commandList, "\n")
+// List returns all commands currently usable
+func List(name string) string {
+	return strings.Join(commandList[name], "\n")
 }

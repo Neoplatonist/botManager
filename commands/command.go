@@ -2,15 +2,15 @@ package command
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/leekchan/timeutil"
+	"github.com/jinzhu/now"
 )
 
-var ActiveCommands []Command
+// ActiveCommands lists all the commands with their actions
+var ActiveCommands = make(map[string][]Command, 0)
 
 // Command defines the database structure of all commands
 type Command struct {
@@ -21,11 +21,12 @@ type Command struct {
 
 // GetList searches the database for all commands for a given plugin.
 // The plugin is received by a string
-func GetList(s string) ([]Command, error) {
+func GetList(name string) ([]Command, error) {
 	// connect to a database
 	// search for plugin by string
+	// add commands to list
 
-	ActiveCommands = []Command{
+	ActiveCommands["discord"] = []Command{
 		Command{
 			Name: "!time",
 			Desc: "Time until Neoplatonist's next stream.",
@@ -34,124 +35,77 @@ func GetList(s string) ([]Command, error) {
 					return
 				}
 
-				type tyme struct {
-					hour   int
-					minute int
-					second int
-				}
-
-				type date struct {
-					tyme
-					stamp time.Time
-				}
-
 				type env struct {
-					day      int
-					current  date
-					delta    tyme
-					schedule map[int]tyme
+					day       int
+					dayChange int
+					current   time.Time
+					parsed    time.Time
+					duration  time.Duration
+					schedule  map[int]string
 				}
 
-				var err error
-				e := &env{}
-				e.schedule = map[int]tyme{
-					2: tyme{10, 0, 0},
-					3: tyme{10, 0, 0},
-					4: tyme{10, 0, 0},
-					5: tyme{10, 0, 0},
+				e := env{}
+				e.schedule = map[int]string{
+					2: "10:00:00",
+					3: "10:00:00",
+					4: "10:00:00",
+					5: "10:00:00",
 				}
 
-				flatten := func() {
-					if e.delta.second < 0 {
-						e.delta.minute--
-						e.delta.second += 60
+				fmtDuration := func(d time.Duration) string {
+					d = d.Round(time.Minute)
+					h := d / time.Hour
+					d -= h * time.Hour
+					m := d / time.Minute
+					return fmt.Sprintf("%02d hours and %02d minutes", h, m)
+				}
+
+				var calcDiff func() time.Duration
+				calcDiff = func() time.Duration {
+					if _, ok := e.schedule[e.day]; !ok {
+						e.day++
+						e.dayChange++
+						e.duration = calcDiff()
 					}
 
-					if e.delta.minute < 0 {
-						e.delta.hour--
-						e.delta.minute += 60
-					}
-				}
-
-				var calcHours func(int) int
-				calcHours = func(diffHour int) int {
-					if _, ok := e.schedule[e.day+1]; !ok {
-						if e.day > 5 {
-							// Restart the week
-							e.day = 0
-							diffHour = calcHours(diffHour + 24)
-						} else {
-							// Scoot up to the next scheduled day
-							e.day++
-							diffHour = calcHours(diffHour + 24)
-						}
-					} else {
-						// Calculate if only next day
-						diffHour = diffHour + 24 - 12
-					}
-
-					return diffHour
-				}
-
-				calcDifference := func() string {
 					var err error
-
-					e.day, err = strconv.Atoi(timeutil.Strftime(&e.current.stamp, "%w"))
+					e.parsed, err = now.Parse(e.schedule[e.day])
 					if err != nil {
-						fmt.Printf("could not parse string to int: %s", err)
+						fmt.Println(err)
 					}
 
-					e.delta.hour = e.schedule[e.day].hour - e.current.hour
-					e.delta.minute = e.schedule[e.day].minute - e.current.minute
-					e.delta.second = e.schedule[e.day].second - e.current.second
+					e.parsed = e.parsed.AddDate(0, 0, e.dayChange)
+					e.duration = time.Until(e.parsed)
 
-					flatten()
-
-					if e.delta.hour < 0 {
-						e.delta.hour = calcHours(e.current.hour)
-
-						e.delta.minute = e.schedule[e.day].minute - e.current.minute
-						e.delta.second = e.schedule[e.day].second - e.current.second
-
-						flatten()
+					if e.duration.Hours() < 0 {
+						e.day++
+						e.dayChange++
+						e.duration = calcDiff()
 					}
 
-					return fmt.Sprintf("%02d:%02d:%02d", e.delta.hour, e.delta.minute, e.delta.second)
+					return e.duration
 				}
 
-				e.current.stamp = time.Now()
-				e.current.hour, err = strconv.Atoi(timeutil.Strftime(&e.current.stamp, "%H"))
-				if err != nil {
-					fmt.Printf("could not parse hour from timestamp: %s", err)
-				}
-
-				e.current.minute, err = strconv.Atoi(timeutil.Strftime(&e.current.stamp, "%M"))
-				if err != nil {
-					fmt.Printf("could not parse minute from timestamp: %s", err)
-				}
-
-				e.current.second, err = strconv.Atoi(timeutil.Strftime(&e.current.stamp, "%S"))
-				if err != nil {
-					fmt.Printf("could not parse second from timestamp: %s", err)
-				}
+				e.current = time.Now()
+				e.day = int(e.current.Weekday())
+				e.duration = calcDiff()
+				result := fmtDuration(e.duration)
 
 				var greeting string
-				if 5 <= e.current.hour && e.current.hour < 11 {
+				if 5 <= e.current.Hour() && e.current.Hour() < 11 {
 					greeting = "Ohayou Gozaimasu"
-				} else if 11 <= e.current.hour && e.current.hour < 18 {
+				} else if 11 <= e.current.Hour() && e.current.Hour() < 18 {
 					greeting = "Konnichiwa"
 				} else {
 					greeting = "Konbanwa"
 				}
-
-				result := calcDifference()
 
 				s.ChannelMessageSend(
 					m.ChannelID,
 					fmt.Sprintf(
 						"%s %v, from Japan! \nTime until next stream: %s",
 						greeting,
-						"Neoplatonist",
+						m.Author.Username,
 						result,
 					),
 				)
@@ -181,16 +135,16 @@ func GetList(s string) ([]Command, error) {
 
 				s.ChannelMessageSend(
 					m.ChannelID,
-					fmt.Sprintf("List of commands: \n%s", CommandList()),
+					fmt.Sprintf("List of commands: \n%s", List("discord")),
 				)
 			},
 		},
 	}
 
-	for _, command := range ActiveCommands {
+	for _, command := range ActiveCommands[name] {
 		cmd := command.Name + " - " + command.Desc
-		addCommand(cmd)
+		addCommand(name, cmd)
 	}
 
-	return ActiveCommands, nil
+	return ActiveCommands[name], nil
 }

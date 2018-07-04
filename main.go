@@ -8,7 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/neoplatonist/discord-bot/bot-v2/bot"
+	"github.com/neoplatonist/botManager/bot"
 )
 
 var (
@@ -52,9 +52,10 @@ func cli() {
 			continue
 		}
 
-		fmt.Printf("You typed command: %s\n", input)
-
-		// Meta Commands
+		// Handles meta (.commands) commands
+		if err := checkMeta(input); err != "" {
+			continue
+		}
 
 		// Prepare Commands
 		// ? potentially already done, maybe try to hook into them

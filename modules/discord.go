@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/neoplatonist/discord-bot/bot-v2/commands"
+	"github.com/neoplatonist/botManager/commands"
 )
 
 // State instantiates the session state
@@ -46,5 +46,14 @@ func (d DiscordState) Connect() error {
 	}
 
 	fmt.Println("Neo-Bot is now running")
+	return nil
+}
+
+func (d DiscordState) Disconnect() error {
+	if err := State.Session.Close(); err != nil {
+		return fmt.Errorf("could not close discord connection: %s", err)
+	}
+
+	fmt.Println("Neo-Bot is now offline")
 	return nil
 }

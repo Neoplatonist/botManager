@@ -1,0 +1,7 @@
+# files
+proto/service.pb.go
+botmanager-client
+botmanager-server
+
+# folders
+vendor

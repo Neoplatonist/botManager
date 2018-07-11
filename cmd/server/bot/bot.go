@@ -3,17 +3,18 @@ package bot
 import (
 	"fmt"
 
-	"github.com/neoplatonist/botManager/modules"
+	"github.com/neoplatonist/botManager/cmd/server/modules"
 )
 
 var moduleList = map[string]module{
-	"discord": modules.Discord(),
+	"Neo-Bot": modules.Discord(),
 }
 
 type module interface {
 	Register() error
 	Connect() error
 	Disconnect() error
+	Name() string
 }
 
 func initModules() {
@@ -24,29 +25,35 @@ func initModules() {
 	}
 
 	fmt.Printf("Modules Registered: \n%s\n", modules.ActiveModules())
-	fmt.Println("------------------------------")
 }
 
-func connectModules() {
+func connectModules() error {
 	for _, module := range moduleList {
 		if err := module.Connect(); err != nil {
-			fmt.Printf("could not connect to module: %s", err)
+			return fmt.Errorf("could not connect to module: %s", err)
 		}
 	}
+
+	return nil
 }
 
 // Connect individual modules
-func Connect(name string) {
+func Connect(name string) (string, error) {
 	if err := moduleList[name].Connect(); err != nil {
-		fmt.Printf("could not connect to module: %s", err)
+		return "", err
 	}
+
+	return moduleList[name].Name() + " has connected", nil
 }
 
 // Disconnect individual modules
-func Disconnect(name string) {
-	if err := moduleList[name].Disconnect(); err != nil {
-		fmt.Printf("could not disconnect module: %s", err)
+func Disconnect(name string) (string, error) {
+	err := moduleList[name].Disconnect()
+	if err != nil {
+		return "", err
 	}
+
+	return moduleList[name].Name() + " has disconnected", nil
 }
 
 // Start initializes bots

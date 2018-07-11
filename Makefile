@@ -1,0 +1,31 @@
+package = botmanager
+
+all: proto buildServer buildClient
+
+server:
+	@./botmanager-server
+
+client:
+	@./botmanager-client
+
+proto:
+	@protoc --go_out=plugins=grpc:. ./proto/*.proto
+
+buildServer: 
+	@go build -o botmanager-server ./cmd/server
+
+buildClient: 
+	@go build -o botmanager-client ./cmd/client
+
+prod:
+	@if [ ! $(docker ps -q -f name=$(package)) ]; then \
+		make prodRM; \
+	fi
+	@docker build \
+		--build-arg DISCORD_APP_USER=$(DISCORD_APP_USER) \
+		-t $(package) .
+	@docker run -d --name $(package) $(package)
+
+prodRM:
+	@docker stop $(package)
+	@docker rm $(package)

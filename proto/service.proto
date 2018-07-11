@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+service CLI {
+  rpc CliCommand(CliCommandReq) returns (CliCommandRes) {}
+}
+
+message CliCommandReq {
+  bytes command = 1;
+}
+
+message CliCommandRes {
+  string message = 1;
+}

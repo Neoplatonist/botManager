@@ -2,11 +2,13 @@ package command
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/jinzhu/now"
+	"github.com/mattn/go-shellwords"
 )
 
 // ActiveCommands lists all the commands with their actions
@@ -26,7 +28,7 @@ func GetList(name string) ([]Command, error) {
 	// search for plugin by string
 	// add commands to list
 
-	ActiveCommands["discord"] = []Command{
+	ActiveCommands["Neo-Bot"] = []Command{
 		Command{
 			Name: "!time",
 			Desc: "Time until Neoplatonist's next stream.",
@@ -126,6 +128,79 @@ func GetList(name string) ([]Command, error) {
 			},
 		},
 		Command{
+			Name: "!remind",
+			Desc: "user in x seconds: !remind <username> \"<message>\" <seconds>",
+			Action: func(s *discordgo.Session, m *discordgo.MessageCreate) {
+				// cmd := strings.Fields(m.Content)
+				cmd, err := shellwords.Parse(m.Content)
+				if err != nil {
+					fmt.Println(err)
+					return
+				}
+
+				if m.Author.ID == s.State.User.ID || !strings.EqualFold(cmd[0], "!remind") {
+					return
+				}
+
+				fmt.Println(cmd)
+
+				if len(cmd) < 4 {
+					s.ChannelMessageSend(
+						m.ChannelID,
+						fmt.Sprintf("%s sorry not enough commands \n!remind <username> <one word message> <seconds>", m.Author.Username),
+					)
+				}
+
+				// user, err := s.User("@Neo-Bot")
+				// if err != nil {
+				// 	fmt.Println(err)
+				// }
+
+				// guild, err := s.UserGuilds(5, "", "")
+				// if err != nil {
+				// 	fmt.Println(err)
+				// }
+
+				// fmt.Println("\n", guild[0].ID)
+
+				// db.Session.Collection("users").find("*")
+
+				// db.Connect()
+				// users := db.Collection("discord-users")
+				// users.Find(bson.M{"username": user})
+
+				list, err := s.GuildMembers("406302666050895882", "", 100)
+				if err != nil {
+					fmt.Println(err)
+				}
+
+				var person *discordgo.User
+				for _, user := range list {
+					if user.User.Username == cmd[1] || user.Nick == cmd[1] {
+						fmt.Println(user.User.Username)
+						person = user.User
+					}
+				}
+
+				if person == nil {
+					s.ChannelMessageSend(
+						m.ChannelID,
+						fmt.Sprintf("%v, sorry no users found", m.Author.Username),
+					)
+
+					return
+				}
+
+				t, _ := strconv.Atoi(cmd[3])
+				time.Sleep(time.Duration(t) * time.Second)
+
+				s.ChannelMessageSend(
+					m.ChannelID,
+					fmt.Sprintf("%v %s", person.Mention(), cmd[2]),
+				)
+			},
+		},
+		Command{
 			Name: "!help",
 			Desc: "List of all discord commands.",
 			Action: func(s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -148,3 +223,8 @@ func GetList(name string) ([]Command, error) {
 
 	return ActiveCommands[name], nil
 }
+
+// !remind @Neoplatonist message 11:15:20 5
+// !help remind
+// !remind <username> <message> <hh:mm:ss> (optional)<days>
+// !remind <username> <message> hours=1 minutes=1 seconds=1 days=1

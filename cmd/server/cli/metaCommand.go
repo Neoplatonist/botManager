@@ -1,13 +1,14 @@
 package cli
 
 import (
-	"errors"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/neoplatonist/botManager/cmd/server/bot"
-	command "github.com/neoplatonist/botManager/cmd/server/commands"
+	"github.com/neoplatonist/botManager/cmd/server/modules"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 const (
@@ -15,8 +16,20 @@ const (
 	metaUnrecognized = "Meta Unrecognized."
 )
 
+func stringComb(list []string) string {
+	return strings.Join(list, "\n")
+}
+
 func doMetaCommand(input []byte) (string, error) {
 	inputArr := strings.Fields(string(input))
+	cmd := []string{
+		".exit - closes the server",
+		".dc / .disconnect <module> - module connection closed",
+		".c / .connect <module> - module connection started",
+		".modules - lists all active modules",
+		".help - lists all meta commands",
+		"<module> -help - lists help for a particular module",
+	}
 
 	switch inputArr[0] {
 	case ".exit":
@@ -32,7 +45,7 @@ func doMetaCommand(input []byte) (string, error) {
 
 	case ".dc", ".disconnect":
 		if len(inputArr) < 2 {
-			return "", errors.New("no module specified")
+			return "", status.Error(codes.InvalidArgument, "no module specified")
 		}
 
 		resp, err := bot.Disconnect(inputArr[1])
@@ -44,7 +57,7 @@ func doMetaCommand(input []byte) (string, error) {
 
 	case ".c", ".connect":
 		if len(inputArr) < 2 {
-			return "no module specified", nil
+			return "", status.Error(codes.InvalidArgument, "no module specified")
 		}
 
 		resp, err := bot.Connect(inputArr[1])
@@ -54,25 +67,21 @@ func doMetaCommand(input []byte) (string, error) {
 
 		return resp, nil
 
+	case ".modules":
+		return modules.ActiveModules(), nil
+
 	case ".help":
 		if len(inputArr) < 2 {
-			return "no module specified", nil
+			return stringComb(cmd), nil
 		}
-
-		list := command.List(inputArr[1])
-		if len(list) < 1 {
-			return "", errors.New("no commands found for module: " + inputArr[1])
-		}
-
-		return list, nil
 	}
 
-	return "", errors.New("no command found: " + string(input))
+	return "", status.Error(codes.InvalidArgument, "no command found: "+string(input))
 }
 
 func checkMeta(command []byte) (string, error) {
 	if string(command[0]) != "." {
-		return "", errors.New("not a command: " + string(command))
+		return "", status.Error(codes.InvalidArgument, "not a command: "+string(command))
 	}
 
 	resp, err := doMetaCommand(command)

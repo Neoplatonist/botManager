@@ -6,7 +6,7 @@ import (
 	"github.com/neoplatonist/botManager/cmd/server/modules"
 )
 
-var moduleList = map[string]module{
+var ModuleList = map[string]module{
 	"Neo-Bot": modules.Discord(),
 }
 
@@ -15,10 +15,11 @@ type module interface {
 	Connect() error
 	Disconnect() error
 	Name() string
+	Command([]string) (string, error)
 }
 
 func initModules() {
-	for _, module := range moduleList {
+	for _, module := range ModuleList {
 		if err := module.Register(); err != nil {
 			fmt.Printf("could not register module: %s", err)
 		}
@@ -28,7 +29,7 @@ func initModules() {
 }
 
 func connectModules() error {
-	for _, module := range moduleList {
+	for _, module := range ModuleList {
 		if err := module.Connect(); err != nil {
 			return fmt.Errorf("could not connect to module: %s", err)
 		}
@@ -39,21 +40,21 @@ func connectModules() error {
 
 // Connect individual modules
 func Connect(name string) (string, error) {
-	if err := moduleList[name].Connect(); err != nil {
+	if err := ModuleList[name].Connect(); err != nil {
 		return "", err
 	}
 
-	return moduleList[name].Name() + " has connected", nil
+	return ModuleList[name].Name() + " has connected", nil
 }
 
 // Disconnect individual modules
 func Disconnect(name string) (string, error) {
-	err := moduleList[name].Disconnect()
+	err := ModuleList[name].Disconnect()
 	if err != nil {
 		return "", err
 	}
 
-	return moduleList[name].Name() + " has disconnected", nil
+	return ModuleList[name].Name() + " has disconnected", nil
 }
 
 // Start initializes bots

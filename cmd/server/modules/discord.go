@@ -67,3 +67,17 @@ func (d DiscordState) Disconnect() error {
 func (d DiscordState) Name() string {
 	return "Neo-Bot"
 }
+
+// Command allows public commands to be accessed
+func (d DiscordState) Command(input []string) (string, error) {
+
+	if len(input) > 1 {
+		switch input[1] {
+		case "-help":
+			list := command.List(input[0])
+			return list, nil
+		}
+	}
+
+	return "", nil
+}

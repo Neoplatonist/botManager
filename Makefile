@@ -3,10 +3,10 @@ package = botmanager
 all: proto buildServer buildClient
 
 server:
-	@./botmanager-server
+	@go run ./cmd/server/*.go
 
 client:
-	@./botmanager-client
+	@go run ./cmd/client/*.go
 
 proto:
 	@protoc --go_out=plugins=grpc:. ./proto/*.proto

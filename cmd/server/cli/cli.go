@@ -12,26 +12,35 @@ import (
 const port = ":6000"
 
 type cliService struct {
-	CLI Service
+	// CLI Service
 }
 
-type Service interface {
-	CliCommand(command []byte) error
-}
+// type Service interface {
+// 	CliCommand(command []byte) error
+// }
 
 // CliCommand checks the commands and executes them
 func (c *cliService) CliCommand(ctx context.Context, in *pb.CliCommandReq) (*pb.CliCommandRes, error) {
+	var err error
+
 	// Handles meta (.commands) commands
 	resp, err := checkMeta(in.Command)
-	if err != nil {
+	if err == nil {
 		return &pb.CliCommandRes{
-			Message: "",
-		}, err
+			Message: resp,
+		}, nil
+	}
+
+	resp, err = checkCmd(in.Command)
+	if err == nil {
+		return &pb.CliCommandRes{
+			Message: resp,
+		}, nil
 	}
 
 	return &pb.CliCommandRes{
-		Message: resp,
-	}, nil
+		Message: "",
+	}, err
 }
 
 // Listen starts the grpc server listener

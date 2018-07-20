@@ -5,7 +5,7 @@ import (
 	"log"
 	"net"
 
-	pb "github.com/neoplatonist/botManager/proto"
+	pb "github.com/neoplatonist/botManager/services/cli/proto"
 	"google.golang.org/grpc"
 )
 

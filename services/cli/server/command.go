@@ -3,7 +3,7 @@ package cli
 import (
 	"strings"
 
-	"github.com/neoplatonist/botManager/cmd/server/bot"
+	"github.com/neoplatonist/botManager/services/bot"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

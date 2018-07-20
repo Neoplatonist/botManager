@@ -29,3 +29,5 @@ prod:
 prodRM:
 	@docker stop $(package)
 	@docker rm $(package)
+
+	# Discord Bot Fix & Rewrite: Golang

@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/neoplatonist/botManager/cmd/server/commands"
+	"github.com/neoplatonist/botManager/services/commands"
 )
 
 // State instantiates the session state
@@ -39,7 +39,7 @@ func (d DiscordState) Register() error {
 		session.AddHandler(command.Action) // Tenative
 	}
 
-	addModule(moduleName)
+	addRegister(moduleName)
 	State = DiscordState{session}
 
 	return nil
@@ -47,10 +47,17 @@ func (d DiscordState) Register() error {
 
 // Connect opens the session
 func (d DiscordState) Connect() error {
+	moduleName := d.Name()
+
+	if !moduleRegistered(moduleName) {
+		return fmt.Errorf("module is not registered: %s", moduleName)
+	}
+
 	if err := State.Session.Open(); err != nil {
 		return fmt.Errorf("could not open discord connection: %s", err)
 	}
 
+	addConnected(d.Name())
 	return nil
 }
 
@@ -60,6 +67,7 @@ func (d DiscordState) Disconnect() error {
 		return fmt.Errorf("could not close discord connection: %s", err)
 	}
 
+	rmConnected(d.Name())
 	return nil
 }
 
@@ -70,7 +78,6 @@ func (d DiscordState) Name() string {
 
 // Command allows public commands to be accessed
 func (d DiscordState) Command(input []string) (string, error) {
-
 	if len(input) > 1 {
 		switch input[1] {
 		case "-help":

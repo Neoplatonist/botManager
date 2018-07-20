@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/neoplatonist/botManager/cmd/server/bot"
-	"github.com/neoplatonist/botManager/cmd/server/modules"
+	"github.com/neoplatonist/botManager/services/bot"
+	"github.com/neoplatonist/botManager/services/modules"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -68,7 +68,7 @@ func doMetaCommand(input []byte) (string, error) {
 		return resp, nil
 
 	case ".modules":
-		return modules.ActiveModules(), nil
+		return modules.RegisteredModules(), nil
 
 	case ".help":
 		if len(inputArr) < 2 {

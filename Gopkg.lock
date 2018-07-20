@@ -46,7 +46,7 @@
     "poly1305",
     "salsa20/salsa"
   ]
-  revision = "a49355c7e3f8fe157a85be2f77e6e269a0f89602"
+  revision = "a2144134853fc9a27a7b1e3eb4f19f1a76df13c9"
 
 [[projects]]
   branch = "master"
@@ -60,7 +60,7 @@
     "internal/timeseries",
     "trace"
   ]
-  revision = "039a4258aec0ad3c79b905677cceeab13b296a77"
+  revision = "a680a1efc54dd51c040b3b5ce4939ea3cf2ea0d1"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -87,7 +87,7 @@
   branch = "master"
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
-  revision = "e92b116572682a5b432ddd840aeaba2a559eeff1"
+  revision = "fedd2861243fd1a8152376292b921b394c7bef7e"
 
 [[projects]]
   name = "google.golang.org/grpc"
@@ -136,6 +136,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "0249ccfc64c6cf201fe5cfd2706a5c2c485d1e77ee142fa43a910a14b6f45d4e"
+  inputs-digest = "22fbc3346b82734248404c37cb683ac5d1aad84da98d24ca617ced2d5f7b7fa6"
   solver-name = "gps-cdcl"
   solver-version = 1

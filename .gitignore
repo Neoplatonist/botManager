@@ -1,5 +1,5 @@
 # files
-proto/service.pb.go
+services/cli/proto/service.pb.go
 botmanager-client
 botmanager-server
 

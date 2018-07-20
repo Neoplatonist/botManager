@@ -9,7 +9,7 @@ client:
 	@go run ./cmd/client/*.go
 
 proto:
-	@protoc --go_out=plugins=grpc:. ./proto/*.proto
+	@protoc --go_out=plugins=grpc:. ./services/cli/proto/*.proto
 
 buildServer: 
 	@go build -o botmanager-server ./cmd/server
